@@ -1,4 +1,5 @@
-import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { Outlet, Link, createRootRoute, HeadContent, Scripts, ScriptOnce } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
@@ -108,8 +109,16 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  useEffect(() => {
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <LanguageProvider>
+      <ScriptOnce>{`if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; } window.scrollTo(0, 0);`}</ScriptOnce>
       <div className="flex min-h-screen flex-col">
         <Header />
         <main className="flex-1">
