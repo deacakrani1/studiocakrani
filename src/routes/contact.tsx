@@ -4,7 +4,6 @@ import { z } from "zod";
 import { Mail, Phone, MapPin, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { useT } from "@/i18n/LanguageProvider";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -73,20 +72,26 @@ function ContactPage() {
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.from("contact_messages").insert({
-      name: parsed.data.name,
-      email: parsed.data.email,
-      phone: parsed.data.phone || null,
-      subject: parsed.data.subject,
-      message: parsed.data.message,
-    });
-    setSubmitting(false);
-    if (error) {
-      toast.error(error.message);
-      return;
+    try {
+      const res = await fetch("https://formspree.io/f/mdajbeoo", {
+        method: "POST",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify(parsed.data),
+      });
+      if (!res.ok) throw new Error("Failed to send");
+      const gtag = (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag;
+      if (typeof gtag === "function") {
+        gtag("event", "conversion", {
+          send_to: "AW-18182666462/pAMMCP-c6bEcEN7xld5D",
+        });
+      }
+      toast.success(t("contact.success"));
+      (e.target as HTMLFormElement).reset();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to send");
+    } finally {
+      setSubmitting(false);
     }
-    toast.success(t("contact.success"));
-    (e.target as HTMLFormElement).reset();
   };
 
   return (
